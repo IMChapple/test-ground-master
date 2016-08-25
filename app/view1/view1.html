@@ -1,0 +1,13 @@
+<!--<h1>Cancelling pending requests</h1>-->
+<button ng-click="vm.addRequests()">Add Requests</button>
+<!--<button ng-click="vm.cancelAll()">Cancel all requests</button>-->
+<ul>
+    <li ng-repeat="req in vm.requests.pending">
+    {{req.url}}
+    </li>
+</ul>
+<ul>
+    <li ng-repeat="req in vm.requests2.pending">
+    {{req.url}}
+    </li>
+</ul>
