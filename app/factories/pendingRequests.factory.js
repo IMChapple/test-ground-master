@@ -3,151 +3,160 @@
 
     angular
         .module('app')
-        .factory('cancelableRequest', CancelableRequest);
+        .factory('fqCancelableQ', fqCancelableQ);
 
-    CancelableRequest.$inject = ['$http', '$q'];
-    function CancelableRequest($http, $q) {
+        //TODO: can define these types globally, need to look up how
+    /**
+     * @ngInject
+     * @param {ng.IQService} $q
+     * @param {ng.IHttpService} $http
+     * @param { {debounce: function(): function(function(), number, Boolean): function()} } fqDebounceQ
+     */
+    function fqCancelableQ($http, $q, fqDebounceQ) {
 
-        //TODO: optionally debounce the http requests
-        function init(url, debounceInterval, immediate) {
-            // var self = this;
+        //original function call
+        /* 
+        function _buildCancelableRequestOriginal() {
+            _cancelAllRequests();
+            var canceler = $q.defer();
+            _addRequest({
+                url: url,
+                canceler: canceler
+            });
+            return $http.get(url, {timeout: canceler.promise }).finally(function() {
+                _removeRequest(url);
+            });
+        }
+        */
 
+
+        /* TODO:
+            ISSUE: when a request is debounced, the return response "then" is ran the number of times the request was made
+                    even though the request is only fired in the Network tab once.
+                    This does not happen with a falt cancel
+        */
+        
+        //TODO: optionally throttle the http requests
+        function init(url, _wait, _immediate) {
+            /* Private Propertys */
+            var _pendingRequests = [];
+
+            /* Private Functions: Util */
             function _attachData(data, config) {
                 return angular.extend(config, {data: data}); 
             }
-
-            function _buildCancelableRequest(data, config) {
-                instance.cancelAll(); //remove existing incomplete requests
-                var canceler = $q.defer();
-                //TODO: the url will always be the same now, will need to push in some kind of ID to be able to track requests
-                instance.add({
-                    url: url,
-                    canceler: canceler
-                });
-                config = config || {};
-                config = angular.extend(config, {timeout: canceler.promise });
-
-                //TODO: add function for all verbs here
-                //Request gets cancelled if the timeout-promise is resolved
-                //Remove itself from the list once it has been resolved
-                // return {
-                //     get: function(){
-                //         return $http.get(url, (data ? _attachData(data, config) : config)).finally(function() {
-                //             instance.remove(url);
-                //         });
-                //     },
-                //     delete: function() {
-                //         return $http.delete(url, (data ? _attachData(data, config) : config)).finally(function() {
-                //             instance.remove(url);
-                //         });
-                //     },
-                //     head: function() {
-                //         return $http.head(url, (data ? _attachData(data, config) : config)).finally(function() {
-                //             instance.remove(url);
-                //         });
-                //     },
-                //     jsonp: function() {
-                //         return $http.jsonp(url, (data ? _attachData(data, config) : config)).finally(function() {
-                //             instance.remove(url);
-                //         });
-                //     },
-                //     post: function(data, config) {
-                //         return $http.post(url, data, config).finally(function() {
-                //             instance.remove(url);
-                //         });
-                //     },
-                //     put: function(data, config) {
-                //         return $http.put(url, data, config).finally(function() {
-                //             instance.remove(url);
-                //         });
-                //     },
-                //     patch: function(data, config) {
-                //         return $http.patch(url, data, config).finally(function() {
-                //             instance.remove(url);
-                //         });
-                //     }
-                // };
-
-
-                return $http.get(url, (data ? _attachData(data, config) : config)).finally(function() {
-                    instance.remove(url);
-                });
-                // // Request gets cancelled if the timeout-promise is resolved
-                // var requestPromise = $http.get(url, { timeout: canceler.promise });
-                // //Remove itself from the list once it has been resolved
-                // requestPromise.finally(function() {
-                //     instance.remove(url);
-                // });
-                // return requestPromise;
+            function _debounce(_func) {
+                return fqDebounceQ.debounce(_func, _wait, _immediate);
             }
 
-            var instance = {
-                pending: [],
-                //TODO: pending is exposed, no need for this get function
-                //TODO: dont like these function names, too similar to http verbs
-                get: function() {
-                    return instance.pending;
-                },
-                add: function(request) {
-                    console.log('adding request');
-                    instance.pending.push(request);
-                },
-                remove: function(request) {
-                    instance.pending = _.filter(instance.pending, function(p) {
-                        return p.url !== request;
-                    });
-                },
-                cancelAll: function() {
-                    angular.forEach(instance.pending, function(p) {
-                        p.canceler.resolve();
-                    });
-                    instance.pending.length = 0;
-                },
-                makeRequest: debounceInterval ? debouncePromise(_buildCancelableRequest, debounceInterval, immediate) : _buildCancelableRequest
-            };
+            /* Private Functions: Modify Pending Requests */
+            function _getPendingRequests() {
+                return _pendingRequests;
+            }
+            function _addRequest(request) {
+                console.log('adding request');
+                _pendingRequests.push(request);
+            }
+            function _removeRequest(request) {
+                _pendingRequests = _.filter(_pendingRequests, function(p) {
+                    return p.Id !== request;
+                });
+            }
+            function _cancelAllRequests() {
+                console.log('clearing all');
+                angular.forEach(_pendingRequests, function(p) {
+                    p.canceler.resolve();
+                });
+                _pendingRequests.length = 0;
+            }
 
-            return instance;
+            
+            //TODO simplify these into a generic call: maybe use string matching on the call type
+            /* Private Functions: Verbs */
+            // --------------------------------
+            function _delete(data, config) {
+                config = _buildConfig(config);
+                return $http.delete(url, (data ? _attachData(data, config) : config)).finally(function() {
+                    _removeRequest(url);
+                });
+            }
+            function _get(data, config) {
+                config = _buildConfig(config);
+                return $http.get(url, (data ? _attachData(data, config) : config)).finally(function() {
+                    _removeRequest(url);
+                });
+            }
+            function _head(data, config) {
+                config = _buildConfig(config);
+                return $http.head(url, (data ? _attachData(data, config) : config)).finally(function() {
+                    _removeRequest(url);
+                });
+            }
+            function _jsonp(data, config) {
+                config = _buildConfig(config);
+                return $http.jsonp(url, (data ? _attachData(data, config) : config)).finally(function() {
+                    _removeRequest(url);
+                });
+            }
+            function _patch(data, config) {
+                return $http.patch(url, data, _buildConfig(config)).finally(function() {
+                    _removeRequest(url);
+                });
+            }
+            function _post(data, config) {
+                return $http.post(url, data, _buildConfig(config)).finally(function() {
+                    _removeRequest(url);
+                });
+            }
+            function _put(data, config) {
+                return $http.put(url, data, _buildConfig(config)).finally(function() {
+                    _removeRequest(url);
+                });
+            }
+            
+            /* BUILD CALL */
+            // --------------------------------
+            function _buildConfig(config) {
+                /* TODO: 
+                    removal of previous requests should probably take place outside of and before this function call,
+                    or toggled based off an optional "auto remove" param */
+                _cancelAllRequests();
+
+                var canceler = $q.defer();
+
+                //TODO: maybe move the add call somewhere else once it is good
+                _addRequest({ 
+                    Id: url, //TODO: using the url temporarily, could use GUID for now
+                    canceler: canceler
+                });
+                /*
+                 adds the cancelable request defer to thetimeout function of the config
+                 params for the request.  When this resolves, the request will cancel 
+                */
+                config = config || {};
+                config = angular.extend(config, { timeout: canceler.promise });
+                return config;
+            }
+
+            /* EXPORTS */
+            // var instance = {};
+            return angular.extend(this, {
+                //TODO: may expost the URL here as well to allow for potential changes to it, or swapping requests
+                getPending: _getPendingRequests,
+                remove:     _removeRequest, //probably dont need to expose this
+                cancelAll:  _cancelAllRequests,
+                //TODO: function to cancel specific request
+                /* VERBS 
+                    TODO: these are repetative, pass the function into a function that attaches the debounce automatically */
+                delete:     _debounce(_delete),
+                get:        _debounce(_get),
+                head:       _debounce(_head),
+                jsonp:      _debounce(_jsonp),
+                patch:      _debounce(_patch),
+                post:       _debounce(_post),
+                put:        _debounce(_put)
+            });
         }
-
-        //TODO: pull this into a separate service or find a better way to integrate it
-        // into the current pendingRequest function, might even be able to just wrap Underscores
-        // debounce in a $q.defer()
-        function debouncePromise(func, wait, immediate) {
-            var timeout;
-            var deferred = $q.defer();
-            return function() {
-                var context = this;
-                var args    = arguments;
-                var later = function() {
-                    timeout = null;
-                    if(!immediate) {
-                        $q.when(func.apply(context, args))
-                            .then(deferred.resolve, deferred.reject, deferred.notify);
-                        deferred = $q.defer();
-                    }
-                };
-                var callNow = immediate && !timeout;
-                if(timeout) {
-                    clearTimeout(timeout);
-                }
-                timeout = setTimeout(later, wait);
-                if(callNow) {
-                    deferred = $q.defer();
-                    $q.when(func.apply(context, args))
-                        .then(deferred.resolve, deferred.reject, deferred.notify);
-                }
-                return deferred.promise;
-            };
-        }
-
         return init; 
     }
 })();
-
-
-
-
-
-
-
-
