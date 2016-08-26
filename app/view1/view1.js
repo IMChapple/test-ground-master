@@ -18,45 +18,51 @@ angular.module('app.view1', ['ngRoute'])
     .module('app.view1')
     .controller('view1Ctrl', View1Ctrl);
 
-  View1Ctrl.$inject = ['$scope', 'cancelableHttp', 'cancelableRequest'];
+  View1Ctrl.$inject = ['fqCancelableQ'];
 
-  function View1Ctrl($scope, httpService, cancelableRequest) {
+  function View1Ctrl(fqCancelableQ) {
     var vm = this;
-    // var counter = 1;
-    vm.requests   = new cancelableRequest('https://public.opencpu.org/ocpu/library/?foo=' + 1, 0, false);
-    vm.requests2  = new cancelableRequest('https://public.opencpu.org/ocpu/library/?foo=' + 2, 0, false);
+    
+    vm.request1   = new fqCancelableQ('https://public.opencpu.org/ocpu/library/?foo=' + 1, 500, true);
+    vm.request2   = new fqCancelableQ('https://public.opencpu.org/ocpu/library/?foo=' + 2);
+
+    vm.request = function() {
+      _request1();
+    };
+
+    function _request1(){
+      vm.request1.get()
+        .then(function(res) {
+          console.log(res);
+        }, function (err) {
+          //ERROR: will run on cancelation: status -1
+          if(err.status !== -1) {
+            console.log('error');
+            console.error(err);
+          }
+        });
+    }
+
+    function _request2(){
+      vm.request2.get()
+        .then(function(res) {
+          console.log(res);
+        }, function (err) {
+          //ERROR: will run on cancelation: status -1
+          if(err.status !== -1) {
+            console.log('error');
+            console.error(err);
+          }
+        });
+    }
 
     vm.addRequests = function() {
 
-      (function(count) {
-          if (count < 10) {
-              // call the function.
-              vm.requests.makeRequest().then(function(res) {
-                console.log(res);
-              }, function(err) {
-                console.log(err);
-              }); 
-
-              // The currently executing function which is an anonymous function.
-              var caller = arguments.callee; 
-              window.setTimeout(function() {
-                  caller(count + 1);
-              }, 0);    
-          }
-      })(0);
-
-
-      for (var i = 0, l = 5; i < l; i++) {
-        vm.requests2.makeRequest();  
+      for (var i = 0, l = 10; i < l; i++) {
+      //  _request1(); 
+       _request2();
       }
-      
-      console.log(vm.requests);
-      console.log(vm.requests2);
-    };
 
-    vm.cancelAll = function() {
-      vm.requests.cancelAll();
-      vm.requests2.cancelAll();
     };
   }
 })();

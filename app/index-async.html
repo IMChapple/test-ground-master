@@ -37,7 +37,8 @@
       'components/version/version-directive.js',
       'components/version/interpolate-filter.js',
       'services/cancelableHttp.service.js',
-      'factories/pendingRequests.factory.js'
+      'factories/fqCancelableQ.service.js'
+      'factories/fqDebounceQ.service.js'
     ], function() {
       // when all is done, execute bootstrap angular application
       angular.bootstrap(document, ['app']);
