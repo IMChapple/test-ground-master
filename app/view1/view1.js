@@ -22,8 +22,7 @@ angular.module('app.view1', ['ngRoute'])
 
   function View1Ctrl(fqCancelableQ) {
     var vm = this;
-    
-    vm.request1   = new fqCancelableQ('https://public.opencpu.org/ocpu/library/?foo=' + 1, 500, true);
+    vm.request1   = new fqCancelableQ('https://public.opencpu.org/ocpu/library/?foo=' + 1);
     vm.request2   = new fqCancelableQ('https://public.opencpu.org/ocpu/library/?foo=' + 2);
 
     vm.request = function() {
