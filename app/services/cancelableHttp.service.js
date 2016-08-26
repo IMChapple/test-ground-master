@@ -3,25 +3,51 @@
 
     angular
         .module('app')
-        .service('cancelableHttp', CancelableHttp);
+        .factory('fqDebounceQ', fqDebounceQ);
 
-    // This service wraps $http to make sure pending requests are tracked 
-    CancelableHttp.$inject = ['$http', '$q', 'cancelableRequest'];
-    function CancelableHttp($http, $q, cancelableRequest) {
+    /**
+     * @ngInject
+     * @param {ng.IQService} $q
+     */
+    function fqDebounceQ($q) {
 
-        // this.get = function(url) {
-        //     var canceller = $q.defer();
-        //     pendingRequest.add({
-        //         url: url,
-        //         canceller: canceller
-        //     });
-        //     //Request gets cancelled if the timeout-promise is resolved
-        //     var requestPromise = $http.get(url, { timeout: canceller.promise });
-        //     //Once a request has failed or succeeded, remove it from the pending list
-        //     requestPromise.finally(function() {
-        //         pendingRequest.remove(url);
-        //     });
-        //     return requestPromise;
-        // }; 
+        return {
+            debounce: _debounce
+        };
+
+        ////////////////
+        //TODO: might even be able to just wrap Underscores
+        // debounce in a $q.defer()
+        function _debounce(func, _wait, _immediate) {
+            if(_wait){
+                var timeout;
+                var deferred = $q.defer();
+                return function() {
+                    var context = this;
+                    var args    = arguments;
+                    var later = function() {
+                        timeout = null;
+                        if(!_immediate) {
+                            $q.when(func.apply(context, args))
+                                .then(deferred.resolve, deferred.reject, deferred.notify);
+                            deferred = $q.defer();
+                        }
+                    };
+                    var callNow = _immediate && !timeout;
+                    if(timeout) {
+                        clearTimeout(timeout);
+                    }
+                    timeout = setTimeout(later, _wait);
+                    if(callNow) {
+                        deferred = $q.defer();
+                        $q.when(func.apply(context, args))
+                            .then(deferred.resolve, deferred.reject, deferred.notify);
+                    }
+                    return deferred.promise;
+                };
+            } else {
+                return func;
+            }
+        }
     }
 })();
