@@ -48,13 +48,17 @@
   <link rel="stylesheet" href="app.css">
 </head>
 <body ng-cloak>
-  <ul class="menu">
-    <li><a href="#!/main">mainCtrl</a></li>
+
+  <ul class="menu container-fluid">
+    <li class="btn btn-default"><a href="#!/main">Main Ctrl</a></li> |
+    <li class="btn btn-default"><a href="#!/main">Blank</a></li> |
+    <li class="btn btn-default"><a href="#!/main">Blank</a></li>
   </ul>
 
-  <div ng-view></div>
-
-  <div>version: <span app-version></span></div>
+  <div class="container">
+    <div ng-view></div>
+    <div>version:<span app-version></span></div>
+  </div>
 
 </body>
 </html>

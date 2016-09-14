@@ -3,8 +3,27 @@
         <h4>Main Ctrl</h4>
     </div>
     <div class="panel-body">
-        <button class="btn btn-primary" ng-click="vm.addRequests()">Add Requests</button>
-        <button class="btn btn-danger" ng-click="vm.request()">Make Request</button>
+        <p class="col-md-12">
+            <h5>Standard Requests</h5>
+            <button class="btn btn-primary" ng-click="vm.addRequests()">Add Requests</button>
+            <button class="btn btn-primary" ng-click="vm.request()">Make Single Request</button>    
+        </p>
+        <p class="col-md-12">
+            <h5>Debounce Tests</h5>
+            <button class="btn btn-warning" ng-click="vm.debounceTest()">Debounce Test</button>
+            <button class="btn btn-warning" ng-click="vm.debounceTest(true)">Debounce Test (immediate)</button>
+        </p>        
+        <p class="col-md-12">
+            <h5>Throttle Tests</h5>
+            <button class="btn btn-danger" >Throttle Test (immediate)</button>
+            <button class="btn btn-danger" >Throttle Test (immediate)</button>
+        </p>
+        <p class="col-md-12">
+            <h5>Logging</h5>
+            <button class="btn btn-info" >Log All</button>
+            <button class="btn btn-info" >Log Errors</button>
+            <button class="btn btn-info" >Log Success</button>
+        </p>    
         <ul class="list-group">
             <li class="list-group-item" ng-repeat="req in vm.request1.getPending()">{{req.url}}</li>
         </ul>
