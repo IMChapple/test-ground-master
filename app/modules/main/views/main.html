@@ -1,0 +1,16 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h4>Main Ctrl</h4>
+    </div>
+    <div class="panel-body">
+        <button class="btn btn-primary" ng-click="vm.addRequests()">Add Requests</button>
+        <button class="btn btn-danger" ng-click="vm.request()">Make Request</button>
+        <ul class="list-group">
+            <li class="list-group-item" ng-repeat="req in vm.request1.getPending()">{{req.url}}</li>
+        </ul>
+        <ul class="list-group">
+            <li class="list-group-item" ng-repeat="req in vm.request2.getPending()">{{req.url}}</li>
+        </ul>
+    </div>
+</div>
+

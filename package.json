@@ -1,8 +1,8 @@
 {
-  "name": "angular-seed",
-  "private": true,
+  "name": "test-ground",
+  "private": false,
   "version": "0.0.0",
-  "description": "A starter project for AngularJS",
+  "description": "A test-ground for testing angular services",
   "repository": "",
   "license": "MIT",
   "devDependencies": {
